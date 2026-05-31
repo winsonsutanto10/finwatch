@@ -1,0 +1,72 @@
+"""Tests for price retrievers."""
+
+from __future__ import annotations
+
+from unittest.mock import patch
+
+import pandas as pd
+import pytest
+
+from finwatch.exceptions import RetrievalError
+from finwatch.retrievers.yahoo import YahooPriceRetriever
+
+
+def _make_df(closes: list[float]) -> pd.DataFrame:
+    index = pd.date_range("2024-01-01", periods=len(closes), freq="D", tz="UTC")
+    return pd.DataFrame(
+        {
+            "Open": closes,
+            "High": closes,
+            "Low": closes,
+            "Close": closes,
+            "Volume": [1000.0] * len(closes),
+        },
+        index=index,
+    )
+
+
+def test_fetch_returns_price_bars() -> None:
+    df = _make_df([100.0, 101.0, 102.0])
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever().fetch("AAPL", "3mo")
+
+    assert len(bars) == 3
+    assert bars[0].symbol == "AAPL"
+    assert bars[0].close == 100.0
+    assert bars[-1].close == 102.0
+
+
+def test_fetch_raises_on_empty_dataframe() -> None:
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = pd.DataFrame()
+        with pytest.raises(RetrievalError, match="UNKNOWN"):
+            YahooPriceRetriever().fetch("UNKNOWN")
+
+
+def test_fetch_missing_volume_defaults_to_zero() -> None:
+    index = pd.date_range("2024-01-01", periods=1, freq="D", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "Open": [50.0],
+            "High": [50.0],
+            "Low": [50.0],
+            "Close": [50.0],
+            "Volume": [None],
+        },
+        index=index,
+    )
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever().fetch("X")
+
+    assert bars[0].volume == 0.0
+
+
+def test_fetch_bar_timestamp_is_utc() -> None:
+    df = _make_df([100.0])
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever().fetch("AAPL")
+
+    assert bars[0].timestamp.tzinfo is not None
