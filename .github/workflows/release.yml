@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # required for OIDC trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Check version matches release tag
+        run: |
+          PKG_VERSION=$(uv run python -c "import importlib.metadata; print(importlib.metadata.version('finwatch'))")
+          TAG_VERSION=${GITHUB_REF_NAME#v}
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: pyproject.toml=$PKG_VERSION, tag=$TAG_VERSION"
+            exit 1
+          fi
+
+      - run: uv sync --group dev
+
+      - name: Lint, typecheck, test
+        run: make check
+
+      - run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
