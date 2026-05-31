@@ -15,16 +15,6 @@ dependencies = [
     "python-telegram-bot>=21.0",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.23",
-    "pytest-mock>=3.12",
-    "mypy>=1.10",
-    "ruff>=0.5",
-    "pandas-stubs>=2.0",
-    "types-requests>=2.31",
-]
 
 [tool.ruff]
 line-length = 88
@@ -52,3 +42,24 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+addopts = "--cov=finwatch --cov-report=term-missing --cov-fail-under=100"
+
+[tool.coverage.run]
+branch = true
+source = ["src/finwatch"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-mock>=3.12",
+    "pytest-cov>=7.0",
+    "mypy>=1.10",
+    "ruff>=0.5",
+    "pandas-stubs>=2.0",
+    "types-requests>=2.31",
+]

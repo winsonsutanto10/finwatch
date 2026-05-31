@@ -70,3 +70,22 @@ def test_fetch_bar_timestamp_is_utc() -> None:
         bars = YahooPriceRetriever().fetch("AAPL")
 
     assert bars[0].timestamp.tzinfo is not None
+
+
+def test_fetch_with_string_index_falls_back_to_fromisoformat() -> None:
+    # Covers the else branch in _row_to_bar when row.name has no to_pydatetime
+    df = pd.DataFrame(
+        {
+            "Open": [50.0],
+            "High": [50.0],
+            "Low": [50.0],
+            "Close": [50.0],
+            "Volume": [1000.0],
+        },
+        index=["2024-01-01"],
+    )
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever().fetch("X")
+
+    assert bars[0].close == 50.0
