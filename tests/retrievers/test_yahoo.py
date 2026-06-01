@@ -1,4 +1,4 @@
-"""Tests for price retrievers."""
+"""Tests for the Yahoo Finance price retriever."""
 
 from __future__ import annotations
 

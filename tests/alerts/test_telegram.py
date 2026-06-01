@@ -1,4 +1,4 @@
-"""Tests for alert channels."""
+"""Tests for the Telegram alert channel."""
 
 from __future__ import annotations
 
@@ -124,8 +124,6 @@ def test_format_message_non_empty() -> None:
 
 
 def test_format_message_skips_non_triggered_rules() -> None:
-    # ScreenResult with one triggered and one non-triggered rule — covers
-    # the _format loop branch where rr.triggered is False.
     triggered_rr = RuleResult(
         symbol="AAPL",
         rule_name="r1",
@@ -140,8 +138,6 @@ def test_format_message_skips_non_triggered_rules() -> None:
         message="RSI above 70 — not triggered",
         detail={},
     )
-    from datetime import UTC, datetime
-
     result = ScreenResult(
         symbol="AAPL",
         screened_at=datetime.now(tz=UTC),

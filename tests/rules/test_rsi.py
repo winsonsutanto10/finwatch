@@ -1,4 +1,4 @@
-"""Tests for screening rules."""
+"""Tests for the RSI rule."""
 
 from __future__ import annotations
 
