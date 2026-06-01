@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "finwatch"
-version = "0.1.0"
+version = "0.2.0"
 description = "Financial market screening with pluggable rules and alerts"
 readme = "README.md"
 authors = [{ name = "winsonsutanto10", email = "winsonsutanto10@gmail.com" }]
