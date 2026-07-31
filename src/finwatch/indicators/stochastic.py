@@ -36,11 +36,11 @@ def stochastic(
 
     Returns:
         :class:`StochasticResult`, with both fields ``float("nan")`` when there
-        are insufficient data points.
+        are insufficient data points or either period is not positive.
     """
     _nan = StochasticResult(math.nan, math.nan)
     n = min(len(highs), len(lows), len(closes))
-    if n < period_k:
+    if period_k <= 0 or period_d <= 0 or n < period_k:
         return _nan
     k_values: list[float] = []
     for i in range(period_k - 1, n):

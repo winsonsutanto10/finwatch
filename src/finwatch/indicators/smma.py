@@ -11,9 +11,10 @@ def smma(closes: list[float], period: int) -> float:
     Also known as the Modified Moving Average (MMA) or Wilder's MA.
 
     Returns:
-        SMMA value, or ``float("nan")`` if fewer than ``period`` data points.
+        SMMA value, or ``float("nan")`` if fewer than ``period`` data points
+        or ``period`` is not positive.
     """
-    if len(closes) < period:
+    if period <= 0 or len(closes) < period:
         return math.nan
     val = sum(closes[:period]) / period
     for price in closes[period:]:

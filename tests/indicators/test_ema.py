@@ -30,3 +30,8 @@ def test_ema_responds_to_new_price() -> None:
     val_flat = ema(seed_closes, period=5)
     val_high = ema(seed_closes + [100.0], period=5)
     assert val_high > val_flat
+
+
+def test_ema_returns_nan_for_non_positive_period() -> None:
+    assert math.isnan(ema([1.0, 2.0, 3.0], period=0))
+    assert math.isnan(ema([1.0, 2.0, 3.0], period=-2))

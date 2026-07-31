@@ -41,3 +41,10 @@ def test_macd_custom_periods() -> None:
     closes = [float(i) for i in range(1, 30)]
     result = macd(closes, fast=5, slow=10, signal_period=3)
     assert not math.isnan(result.macd)
+
+
+def test_macd_returns_nan_for_non_positive_periods() -> None:
+    closes = [float(i) for i in range(1, 40)]
+    assert math.isnan(macd(closes, fast=0).macd)
+    assert math.isnan(macd(closes, slow=0).macd)
+    assert math.isnan(macd(closes, signal_period=0).macd)

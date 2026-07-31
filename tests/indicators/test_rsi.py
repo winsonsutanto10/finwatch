@@ -53,3 +53,8 @@ def test_rsi_period_respected() -> None:
     closes = [100.0] * 8  # not enough for period=14, but enough for period=7
     assert math.isnan(rsi(closes, period=14))
     assert not math.isnan(rsi(closes, period=7))
+
+
+def test_rsi_returns_nan_for_non_positive_period() -> None:
+    assert math.isnan(rsi([1.0, 2.0, 3.0], period=0))
+    assert math.isnan(rsi([1.0, 2.0, 3.0], period=-2))

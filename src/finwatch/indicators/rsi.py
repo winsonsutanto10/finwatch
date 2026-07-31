@@ -16,9 +16,9 @@ def rsi(closes: list[float], period: int = 14) -> float:
 
     Returns:
         RSI value in the range [0, 100], or ``float("nan")`` if there are
-        fewer than ``period + 1`` data points.
+        fewer than ``period + 1`` data points or ``period`` is not positive.
     """
-    if len(closes) < period + 1:
+    if period <= 0 or len(closes) < period + 1:
         return math.nan
     series = pd.Series(closes, dtype=float)
     delta = series.diff().dropna()

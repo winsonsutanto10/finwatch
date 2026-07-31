@@ -24,3 +24,8 @@ def test_sma_uses_last_period_bars() -> None:
 
 def test_sma_single_bar() -> None:
     assert sma([42.0], period=1) == pytest.approx(42.0)
+
+
+def test_sma_returns_nan_for_non_positive_period() -> None:
+    assert math.isnan(sma([1.0, 2.0, 3.0], period=0))
+    assert math.isnan(sma([1.0, 2.0, 3.0], period=-2))

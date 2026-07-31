@@ -29,3 +29,8 @@ def test_smma_smooths_slower_than_ema() -> None:
 def test_smma_flat_series() -> None:
     closes = [5.0] * 20
     assert smma(closes, period=10) == pytest.approx(5.0)
+
+
+def test_smma_returns_nan_for_non_positive_period() -> None:
+    assert math.isnan(smma([1.0, 2.0, 3.0], period=0))
+    assert math.isnan(smma([1.0, 2.0, 3.0], period=-2))
