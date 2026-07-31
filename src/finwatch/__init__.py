@@ -2,7 +2,25 @@
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError, version
+
 from finwatch.models import PriceBar, RuleResult, ScreenResult
 from finwatch.watcher import Watcher
 
-__all__ = ["PriceBar", "RuleResult", "ScreenResult", "Watcher"]
+
+def _resolve_version() -> str:
+    """Resolve the installed package version.
+
+    Returns:
+        The installed version string, or ``"0.0.0"`` when the package is
+        imported from source without being installed.
+    """
+    try:
+        return version("finwatch")
+    except PackageNotFoundError:
+        return "0.0.0"
+
+
+__version__ = _resolve_version()
+
+__all__ = ["PriceBar", "RuleResult", "ScreenResult", "Watcher", "__version__"]
