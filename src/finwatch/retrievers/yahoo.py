@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from datetime import UTC, datetime
 from typing import Any
 
@@ -32,6 +33,11 @@ class YahooPriceRetriever(PriceRetriever):
         df: pd.DataFrame = yf.Ticker(symbol).history(period=period)
         if df.empty:
             raise RetrievalError(f"No data returned for symbol '{symbol}'")
+        # Corporate-action and halted sessions can produce rows with NaN
+        # OHLC; drop them so they cannot poison downstream indicators.
+        df = df.dropna(subset=["Open", "High", "Low", "Close"])
+        if df.empty:
+            raise RetrievalError(f"No data returned for symbol '{symbol}'")
         return [self._row_to_bar(symbol, row) for _, row in df.iterrows()]
 
     @staticmethod
@@ -52,6 +58,8 @@ class YahooPriceRetriever(PriceRetriever):
             ts = datetime.fromisoformat(str(raw_ts))
         if ts.tzinfo is None:
             ts = ts.replace(tzinfo=UTC)
+        volume_raw = row.get("Volume", 0.0) or 0.0
+        volume = 0.0 if not math.isfinite(float(volume_raw)) else float(volume_raw)
         return PriceBar(
             symbol=symbol,
             timestamp=ts,
@@ -59,5 +67,5 @@ class YahooPriceRetriever(PriceRetriever):
             high=float(row["High"]),
             low=float(row["Low"]),
             close=float(row["Close"]),
-            volume=float(row.get("Volume", 0.0) or 0.0),
+            volume=volume,
         )

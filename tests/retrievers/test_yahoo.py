@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from unittest.mock import patch
 
 import pandas as pd
@@ -89,3 +90,59 @@ def test_fetch_with_string_index_falls_back_to_fromisoformat() -> None:
         bars = YahooPriceRetriever().fetch("X")
 
     assert bars[0].close == 50.0
+
+
+def test_fetch_drops_rows_with_nan_ohlc() -> None:
+    index = pd.date_range("2024-01-01", periods=3, freq="D", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "Open": [100.0, math.nan, 102.0],
+            "High": [100.0, math.nan, 102.0],
+            "Low": [100.0, math.nan, 102.0],
+            "Close": [100.0, math.nan, 102.0],
+            "Volume": [1000.0, 0.0, 1000.0],
+        },
+        index=index,
+    )
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever().fetch("AAPL")
+
+    assert [b.close for b in bars] == [100.0, 102.0]
+
+
+def test_fetch_raises_when_all_rows_have_nan_ohlc() -> None:
+    index = pd.date_range("2024-01-01", periods=2, freq="D", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "Open": [math.nan, math.nan],
+            "High": [math.nan, math.nan],
+            "Low": [math.nan, math.nan],
+            "Close": [math.nan, math.nan],
+            "Volume": [0.0, 0.0],
+        },
+        index=index,
+    )
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        with pytest.raises(RetrievalError, match="UNKNOWN"):
+            YahooPriceRetriever().fetch("UNKNOWN")
+
+
+def test_fetch_nan_volume_becomes_zero() -> None:
+    index = pd.date_range("2024-01-01", periods=1, freq="D", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "Open": [50.0],
+            "High": [50.0],
+            "Low": [50.0],
+            "Close": [50.0],
+            "Volume": [math.nan],
+        },
+        index=index,
+    )
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever().fetch("X")
+
+    assert bars[0].volume == 0.0
