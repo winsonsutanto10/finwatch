@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, version
 
-from finwatch.models import PriceBar, RuleResult, ScreenResult
+from finwatch.backtesting import BacktestEngine
+from finwatch.models import BacktestResult, PriceBar, RuleResult, ScreenResult, Trade
 from finwatch.watcher import Watcher
 
 
@@ -23,4 +24,13 @@ def _resolve_version() -> str:
 
 __version__ = _resolve_version()
 
-__all__ = ["PriceBar", "RuleResult", "ScreenResult", "Watcher", "__version__"]
+__all__ = [
+    "BacktestEngine",
+    "BacktestResult",
+    "PriceBar",
+    "RuleResult",
+    "ScreenResult",
+    "Trade",
+    "Watcher",
+    "__version__",
+]

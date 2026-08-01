@@ -66,6 +66,35 @@ print(f"Screened {len(results)} assets — {len(triggered)} triggered.")
 
 Each symbol is evaluated against **all** rules. `ScreenResult.triggered` is `True` if any rule fires. Inspect `result.rule_results` for per-rule detail.
 
+## Backtesting a signal
+
+Validate a rule against historical price data before screening live:
+
+```python
+from finwatch import BacktestEngine, ExitMode
+from finwatch.retrievers.yahoo import YahooPriceRetriever
+from finwatch.rules.rsi import RSIRule, RSIDirection
+
+bars = YahooPriceRetriever().fetch("AAPL", "1y")
+
+result = BacktestEngine(
+    rule=RSIRule(threshold=30, direction=RSIDirection.BELOW),
+    exit_mode=ExitMode.HOLD,
+    hold_bars=5,
+).run(bars)
+
+print(f"{result.num_trades} trades, win rate {result.win_rate:.0%}")
+print(f"Total return {result.total_return_pct:+.2f}%")
+print(f"Avg return per trade {result.avg_return_pct:+.2f}%")
+```
+
+The engine re-evaluates the rule on every bar using **only data available up to that bar** (no look-ahead). A long position opens on the close of the first bar where the rule triggers while flat, and closes according to `exit_mode`:
+
+- `ExitMode.HOLD` — close after `hold_bars` bars (default `5`).
+- `ExitMode.SIGNAL` — close when the rule stops triggering.
+
+Any position still open at the last bar is force-closed there. Every simulated round trip is available in `result.trades` (`Trade` objects with entry/exit timestamps, prices, and per-trade return).
+
 ## Async usage
 
 `Watcher.run()` is synchronous and manages its own event loop. Inside an async application (or a notebook cell with a running loop), use `await watcher.arun(symbols)` instead — it behaves identically:
