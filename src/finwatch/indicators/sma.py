@@ -9,8 +9,9 @@ def sma(closes: list[float], period: int) -> float:
     """Average of the last ``period`` closing prices.
 
     Returns:
-        SMA value, or ``float("nan")`` if fewer than ``period`` data points.
+        SMA value, or ``float("nan")`` if fewer than ``period`` data points
+        or ``period`` is not positive.
     """
-    if len(closes) < period:
+    if period <= 0 or len(closes) < period:
         return math.nan
     return sum(closes[-period:]) / period

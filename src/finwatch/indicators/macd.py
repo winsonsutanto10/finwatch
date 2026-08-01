@@ -47,10 +47,10 @@ def macd(
 
     Returns:
         :class:`MACDResult`, with all fields ``float("nan")`` when there are
-        insufficient data points.
+        insufficient data points or any period is not positive.
     """
     _nan = MACDResult(math.nan, math.nan, math.nan)
-    if len(closes) < slow:
+    if slow <= 0 or fast <= 0 or signal_period <= 0 or len(closes) < slow:
         return _nan
     fast_ema = _ema_series(closes, fast)
     slow_ema = _ema_series(closes, slow)

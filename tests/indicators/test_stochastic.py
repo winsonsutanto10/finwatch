@@ -58,3 +58,15 @@ def test_stochastic_d_is_sma_of_k() -> None:
     result = stochastic(highs, lows, closes, period_k=1, period_d=3)
     assert result.k == pytest.approx(100.0)
     assert result.d == pytest.approx(80.0)
+
+
+def test_stochastic_returns_nan_for_non_positive_periods() -> None:
+    highs = [10.0] * 20
+    lows = [1.0] * 20
+    closes = [5.0] * 20
+    result_k = stochastic(highs, lows, closes, period_k=0, period_d=3)
+    result_d = stochastic(highs, lows, closes, period_k=14, period_d=0)
+    assert math.isnan(result_k.k)
+    assert math.isnan(result_k.d)
+    assert math.isnan(result_d.k)
+    assert math.isnan(result_d.d)
