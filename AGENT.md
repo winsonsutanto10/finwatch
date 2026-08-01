@@ -3,7 +3,7 @@
 ## Architecture
 
 - `src/` layout: all package code under `src/finwatch/`. Never import from the project root.
-- Four subpackages (all plural): `retrievers/`, `rules/`, `alerts/`, `indicators/`.
+- Five subpackages: `retrievers/`, `rules/`, `alerts/`, `indicators/` (all plural) and `backtesting/`.
 - `models.py` is **stdlib-only** — no pandas, yfinance, or telegram types.
 - `Watcher` depends only on ABCs (`PriceRetriever`, `Rule`, `Alert`), never on concrete classes.
 

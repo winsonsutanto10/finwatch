@@ -64,3 +64,73 @@ class ScreenResult:
     screened_at: datetime
     rule_results: tuple[RuleResult, ...]
     triggered: bool
+
+
+@dataclass(frozen=True)
+class Trade:
+    """One simulated round trip in a backtest.
+
+    Attributes:
+        entry_timestamp: Bar time of the entry (UTC).
+        entry_price: Close price at entry.
+        exit_timestamp: Bar time of the exit (UTC).
+        exit_price: Close price at exit.
+        return_pct: Percentage return of the trade.
+    """
+
+    entry_timestamp: datetime
+    entry_price: float
+    exit_timestamp: datetime
+    exit_price: float
+    return_pct: float
+
+
+@dataclass(frozen=True)
+class BacktestResult:
+    """Outcome of backtesting one rule against one symbol's price history.
+
+    Attributes:
+        symbol: Ticker symbol backtested (``""`` for empty input).
+        rule_name: Human-readable rule identifier.
+        exit_mode: How positions were closed (see ``backtesting.ExitMode``).
+        hold_bars: Bars held in HOLD mode (0 when the mode is not HOLD).
+        num_bars: Number of price bars evaluated.
+        trades: Every simulated trade, in chronological order.
+    """
+
+    symbol: str
+    rule_name: str
+    exit_mode: str
+    hold_bars: int
+    num_bars: int
+    trades: tuple[Trade, ...]
+
+    @property
+    def num_trades(self) -> int:
+        """Number of simulated trades."""
+        return len(self.trades)
+
+    @property
+    def win_rate(self) -> float:
+        """Fraction of trades with a positive return (``0.0`` if no trades)."""
+        if not self.trades:
+            return 0.0
+        wins = sum(1 for t in self.trades if t.return_pct > 0)
+        return wins / len(self.trades)
+
+    @property
+    def total_return_pct(self) -> float:
+        """Compounded return across all trades in percent (``0.0`` if none)."""
+        if not self.trades:
+            return 0.0
+        equity = 1.0
+        for trade in self.trades:
+            equity *= 1.0 + trade.return_pct / 100.0
+        return (equity - 1.0) * 100.0
+
+    @property
+    def avg_return_pct(self) -> float:
+        """Mean return per trade in percent (``0.0`` if no trades)."""
+        if not self.trades:
+            return 0.0
+        return sum(t.return_pct for t in self.trades) / len(self.trades)
