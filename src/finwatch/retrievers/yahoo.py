@@ -51,13 +51,13 @@ class YahooPriceRetriever(PriceRetriever):
             RetrievalError: If the symbol is unknown or returns no data.
         """
         df: pd.DataFrame = yf.Ticker(symbol).history(period=period)
-        self._require_data(df, symbol)
+        self._validate_frame(df, symbol)
         df = self._sanitize(df)
-        self._require_data(df, symbol)
+        self._validate_frame(df, symbol)
         return [self._row_to_bar(symbol, row) for _, row in df.iterrows()]
 
     @staticmethod
-    def _require_data(df: pd.DataFrame, symbol: str) -> None:
+    def _validate_frame(df: pd.DataFrame, symbol: str) -> None:
         """Raise RetrievalError when the frame has no usable rows.
 
         Args:
