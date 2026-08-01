@@ -146,3 +146,48 @@ def test_fetch_nan_volume_becomes_zero() -> None:
         bars = YahooPriceRetriever().fetch("X")
 
     assert bars[0].volume == 0.0
+
+
+def test_fetch_ffill_fills_nan_with_previous_row() -> None:
+    index = pd.date_range("2024-01-01", periods=3, freq="D", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "Open": [100.0, math.nan, 102.0],
+            "High": [100.0, math.nan, 102.0],
+            "Low": [100.0, math.nan, 102.0],
+            "Close": [100.0, math.nan, 102.0],
+            "Volume": [1000.0, math.nan, 1000.0],
+        },
+        index=index,
+    )
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever(fill_method="ffill").fetch("AAPL")
+
+    assert [b.close for b in bars] == [100.0, 100.0, 102.0]
+    assert bars[1].volume == 1000.0
+
+
+def test_fetch_ffill_drops_leading_nan_rows() -> None:
+    index = pd.date_range("2024-01-01", periods=3, freq="D", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "Open": [math.nan, math.nan, 102.0],
+            "High": [math.nan, math.nan, 102.0],
+            "Low": [math.nan, math.nan, 102.0],
+            "Close": [math.nan, math.nan, 102.0],
+            "Volume": [0.0, 0.0, 1000.0],
+        },
+        index=index,
+    )
+    with patch("yfinance.Ticker") as mock_ticker:
+        mock_ticker.return_value.history.return_value = df
+        bars = YahooPriceRetriever(fill_method="ffill").fetch("AAPL")
+
+    assert len(bars) == 1
+    assert bars[0].close == 102.0
+
+
+def test_fetch_invalid_fill_method_raises_value_error() -> None:
+    with pytest.raises(ValueError, match="fill_method"):
+        YahooPriceRetriever(fill_method="bogus")

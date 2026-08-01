@@ -15,7 +15,27 @@ from finwatch.retrievers.base import PriceRetriever
 
 
 class YahooPriceRetriever(PriceRetriever):
-    """Fetches OHLCV data from Yahoo Finance via yfinance."""
+    """Fetches OHLCV data from Yahoo Finance via yfinance.
+
+    Args:
+        fill_method: How to handle rows with missing (NaN) OHLC data.
+            ``"drop"`` removes such rows (default); ``"ffill"`` fills
+            them with the previous valid row first. Rows that still
+            lack data after filling (e.g. leading NaNs) are dropped.
+    """
+
+    def __init__(self, fill_method: str = "drop") -> None:
+        """Initialise the retriever.
+
+        Args:
+            fill_method: ``"drop"`` or ``"ffill"`` (see class docstring).
+
+        Raises:
+            ValueError: If ``fill_method`` is not supported.
+        """
+        if fill_method not in ("drop", "ffill"):
+            raise ValueError(f"unsupported fill_method: {fill_method!r}")
+        self._fill_method = fill_method
 
     def fetch(self, symbol: str, period: str = "3mo") -> list[PriceBar]:
         """Fetch historical price bars from Yahoo Finance.
@@ -31,14 +51,37 @@ class YahooPriceRetriever(PriceRetriever):
             RetrievalError: If the symbol is unknown or returns no data.
         """
         df: pd.DataFrame = yf.Ticker(symbol).history(period=period)
-        if df.empty:
-            raise RetrievalError(f"No data returned for symbol '{symbol}'")
-        # Corporate-action and halted sessions can produce rows with NaN
-        # OHLC; drop them so they cannot poison downstream indicators.
-        df = df.dropna(subset=["Open", "High", "Low", "Close"])
-        if df.empty:
-            raise RetrievalError(f"No data returned for symbol '{symbol}'")
+        self._require_data(df, symbol)
+        df = self._sanitize(df)
+        self._require_data(df, symbol)
         return [self._row_to_bar(symbol, row) for _, row in df.iterrows()]
+
+    @staticmethod
+    def _require_data(df: pd.DataFrame, symbol: str) -> None:
+        """Raise RetrievalError when the frame has no usable rows.
+
+        Args:
+            df: History frame to inspect.
+            symbol: Ticker symbol for the error message.
+
+        Raises:
+            RetrievalError: If ``df`` is empty.
+        """
+        if df.empty:
+            raise RetrievalError(f"No data returned for symbol '{symbol}'")
+
+    def _sanitize(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Apply the configured fill method and drop remaining NaN rows.
+
+        Args:
+            df: Raw history frame from yfinance.
+
+        Returns:
+            Frame with no NaN OHLC values.
+        """
+        if self._fill_method == "ffill":
+            df = df.ffill()
+        return df.dropna(subset=["Open", "High", "Low", "Close"])
 
     @staticmethod
     def _row_to_bar(symbol: str, row: pd.Series[Any]) -> PriceBar:
