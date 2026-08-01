@@ -44,6 +44,23 @@ class Watcher:
     def run(self, symbols: list[str]) -> list[ScreenResult]:
         """Screen symbols and fire alerts for any that trigger.
 
+        Synchronous convenience wrapper around :meth:`arun` that creates a
+        fresh event loop internally. Prefer :meth:`arun` when calling from an
+        already-running event loop (async apps, notebooks, etc.).
+
+        Args:
+            symbols: Ticker symbols to screen.
+
+        Returns:
+            All ScreenResult objects (triggered and non-triggered).
+        """
+        return asyncio.run(self.arun(symbols))
+
+    async def arun(self, symbols: list[str]) -> list[ScreenResult]:
+        """Screen symbols and fire alerts for any that trigger.
+
+        Async equivalent of :meth:`run` for use inside a running event loop.
+
         Args:
             symbols: Ticker symbols to screen.
 
@@ -53,7 +70,7 @@ class Watcher:
         results = [self._screen_symbol(symbol) for symbol in symbols]
         triggered = [r for r in results if r.triggered]
         if triggered and self._alerts:
-            asyncio.run(self._dispatch(triggered))
+            await self._dispatch(triggered)
         return results
 
     def _screen_symbol(self, symbol: str) -> ScreenResult:

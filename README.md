@@ -66,6 +66,14 @@ print(f"Screened {len(results)} assets — {len(triggered)} triggered.")
 
 Each symbol is evaluated against **all** rules. `ScreenResult.triggered` is `True` if any rule fires. Inspect `result.rule_results` for per-rule detail.
 
+## Async usage
+
+`Watcher.run()` is synchronous and manages its own event loop. Inside an async application (or a notebook cell with a running loop), use `await watcher.arun(symbols)` instead — it behaves identically:
+
+```python
+results = await watcher.arun(["AAPL", "TSLA", "BTC-USD"])
+```
+
 ## Architecture
 
 ```
