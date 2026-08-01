@@ -71,7 +71,7 @@ Each symbol is evaluated against **all** rules. `ScreenResult.triggered` is `Tru
 Validate a rule against historical price data before screening live:
 
 ```python
-from finwatch import BacktestEngine, ExitMode
+from finwatch.backtesting import BacktestEngine, ExitMode
 from finwatch.retrievers.yahoo import YahooPriceRetriever
 from finwatch.rules.rsi import RSIRule, RSIDirection
 
