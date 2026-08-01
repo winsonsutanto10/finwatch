@@ -51,13 +51,13 @@ class YahooPriceRetriever(PriceRetriever):
             RetrievalError: If the symbol is unknown or returns no data.
         """
         df: pd.DataFrame = yf.Ticker(symbol).history(period=period)
-        self._validate_frame(df, symbol)
-        df = self._sanitize(df)
-        self._validate_frame(df, symbol)
+        self._validate_data(df, symbol)
+        df = self._sanitize_data(df)
+        self._validate_data(df, symbol)
         return [self._row_to_bar(symbol, row) for _, row in df.iterrows()]
 
     @staticmethod
-    def _validate_frame(df: pd.DataFrame, symbol: str) -> None:
+    def _validate_data(df: pd.DataFrame, symbol: str) -> None:
         """Raise RetrievalError when the frame has no usable rows.
 
         Args:
@@ -70,7 +70,7 @@ class YahooPriceRetriever(PriceRetriever):
         if df.empty:
             raise RetrievalError(f"No data returned for symbol '{symbol}'")
 
-    def _sanitize(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _sanitize_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Apply the configured fill method and drop remaining NaN rows.
 
         Args:
